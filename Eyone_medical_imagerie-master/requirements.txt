@@ -1,0 +1,8 @@
+uvicorn
+apscheduler 
+httpx
+llama_index
+twilio
+python-multipart
+fastapi
+motor
