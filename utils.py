@@ -7,6 +7,8 @@ import torchvision.transforms as T
 from fastapi import HTTPException
 from torchvision import models
 import torch.nn as nn
+from timm import create_model
+from safetensors.torch import load_model
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -19,13 +21,20 @@ CLASS_NAMES_SWIN = [
     "mass", "nodule", "pneumonia", "pneumothorax", "consolidation",
     "edema", "emphysema", "fibrosis", "pleural_checking", "hernia"
 ]
-MODEL_PATH_SWIN = f'./best_{MODEL_NAME_SWIN}-pascal-cardio/model.safetensors'
 
+CLASS_NAMES_Lung_and_Colon = ['colon_adenocarcinoma', 'colon_benign_tissue', 'lung_adenocarcinoma', 'lung_benign_tissue', 'lung_squamous_cell_carcinoma']
+MODEL_PATH_Lung_and_Colon = "./cancer_models/lung_and_colon_cancer_model.pth"
+
+MODEL_PATH_SWIN = f'./cancer_models/model.safetensors'
+MODEL_PATH_KIDNEY ="./cancer_models/Kidney_Cancer-cancer_best_model_100.0.pth"
 # Configuration pour le modèle cervical (ResNet50)
-MODEL_PATH_CERVICAL = '/home/ubuntu/best_model.pth'
+MODEL_PATH_CERVICAL = './cancer_models/best_cervical_model.pth'
 CLASS_NAMES_CERVICAL = [
     "Col Sain", "CIN1(Lésion légère)", "CIN2(Lésion Modérée)", "CIN3(Lésion sévère)"
 ]
+MODEL_PATH_ACUTE_LYMPHOBLASTIC_LEUKEMIA = "./cancer_models/ALL-cancer_best_model_100.0.pth"
+CLASS_NAMES_ACUTE_LYMPHOBLASTIC_LEUKEMIA = ['ACUTE_LYMPHOBLASTIC_LEUKEMIA_pre_stage_cells', 'ACUTE_LYMPHOBLASTIC_LEUKEMIA_advanced_leukemia', 'ACUTE_LYMPHOBLASTIC_LEUKEMIA_benign', 'ACUTE_LYMPHOBLASTIC_LEUKEMIA_early_stage_abnormal_cells']
+CLASS_NAMES_KIDNEY = ['kidney_tumor', 'kidney_normal']
 IMG_SIZE = (224, 224)
 THRESHOLD = 0.0
 
@@ -51,12 +60,13 @@ def load_swin_model():
     return model
 
 # Charger le modèle cervical (ResNet50)
-def load_cervical_model():
+def load_resnet_model(CLASS_NAME, MODEL_PATH):
     model = models.resnet50(pretrained=False)
-    model.fc = nn.Linear(model.fc.in_features, len(CLASS_NAMES_CERVICAL))
-    model.load_state_dict(torch.load(MODEL_PATH_CERVICAL, map_location=torch.device('cpu')))
+    model.fc = nn.Linear(model.fc.in_features, len(CLASS_NAME))
+    model.load_state_dict(torch.load(MODEL_PATH, map_location=torch.device('cpu')))
     model.eval()
     return model
+
 
 # Fonction pour prétraiter l'image pour chaque modèle
 def preprocess_image(image_bytes: bytes, model_type="cervical"):
